@@ -3,12 +3,12 @@ const axios = require('axios');
 const FormData = require('form-data');
 require('dotenv').config();
 
-// Use the canvas package for image generation
+// Use @napi-rs/canvas for image generation (pre-built binaries, no compile needed)
 // If it fails to load, the server still starts and falls back to embed-only posts
 let canvasModule = null;
 let canvasLoadError = null;
 try {
-	canvasModule = require('canvas');
+	canvasModule = require('@napi-rs/canvas');
 	const { createCanvas, loadImage, GlobalFonts } = canvasModule;
 
 	// Register fonts if available (optional - falls back to default)
