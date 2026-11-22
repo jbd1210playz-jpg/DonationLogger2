@@ -3,8 +3,8 @@ local API = {}
 local HttpService = game:GetService("HttpService")
 
 -- ⚙️ CONFIGURATION
-local IMAGE_API_URL = "http://localhost:3000/api/donation"  -- ⚠️ CHANGE THIS TO YOUR PUBLIC URL
-local WEBHOOK = "https://discord.com/api/webhooks/1486493175924261035/ixdzicHQ_zHsA1PTyRIx70zUjfkCkyaiGnY8lZFNm0ia4WSVE0UVtD_J1rKx5RyMfZBh"
+local IMAGE_API_URL = "https://donantionloggerpdz-production.up.railway.app/api/donation"  -- ⚠️ CHANGE THIS TO YOUR PUBLIC URL
+local WEBHOOK = "https://discord.com/api/webhooks/1573726526279520286/Al80Xb6c_K4tGbTXj5u9HCsg8y2FNI4pK_vNDIXONZy3txiCnFYoOnZSOB1IY9O93E4c"
 
 -- Helper function to send embed (for non-donation logs)
 local function sendEmbed(title, description, color, thumbnailUrl)
