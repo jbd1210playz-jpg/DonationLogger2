@@ -12,10 +12,9 @@ This is your updated API module that integrates with the custom image generation
 - Keeps all your existing functions working
 
 ### 📊 Donation Tiers (with emojis):
-- **100k - 999k**: Purple nuke emoji `<:nuke:1466700817275949067>`
-- **1M - 9.9M**: Pink smite emoji `<:smite:1466700843293216914>`
-- **10M+**: Red starfall emoji `<:starfall:1466700883097157755>`
-
+- **100k - 999k**: Purple nuke emoji `<:nuke:1574112430391296130>`
+- **1M - 9.9M**: Pink smite emoji `<:smite:1574111420491243600>`
+- **10M+**: Red starfall emoji `<:starfall:1574111560152911912>`   
 ## 🚀 Setup
 
 ### 1. Update the API URL (Line 5)
