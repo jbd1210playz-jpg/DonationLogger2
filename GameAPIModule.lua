@@ -30,14 +30,14 @@ local function sendEmbed(title, description, color, thumbnailUrl)
 			Enum.HttpContentType.ApplicationJson
 		)
 	end)
-	
+
 	if not success then
 		warn("[API] Failed to send embed:", result)
 	end
 end
 
 -- Helper function to send donation with custom image
-local function sendDonationImage(donatorName, donatorId, raiserName, raiserId, amount, message)
+local function sendDonationImage(donatorName, donatorId, raiserName, raiserId, amount, message, color, tier, hasEffects)
 	local data = {
 		playerName = donatorName,
 		userId = donatorId,
@@ -45,9 +45,13 @@ local function sendDonationImage(donatorName, donatorId, raiserName, raiserId, a
 		recipientUserId = raiserId,
 		amount = amount,
 		message = message or "",
+		color = string.format("#%06x", color),
+		tier = tier,
+		rim = hasEffects,
+		effects = hasEffects,
 		timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
 	}
-	
+
 	local success, result = pcall(function()
 		return HttpService:RequestAsync({
 			Url = IMAGE_API_URL,
@@ -58,7 +62,7 @@ local function sendDonationImage(donatorName, donatorId, raiserName, raiserId, a
 			Body = HttpService:JSONEncode(data)
 		})
 	end)
-	
+
 	if success then
 		if result.Success and result.StatusCode == 200 then
 			print("[API] ✅ Donation logged with custom image!")
@@ -111,36 +115,37 @@ function API._ulitiesdonation(info, amount)
 	local donatorId = tonumber(info.donatorId)
 	local raiserId = tonumber(info.raiserId)
 
-	-- Determine emoji based on amount
-	local emoji
+	-- Determine emoji, color, and tier based on amount
+	-- Rim/effects only apply to the 1m and 10m tiers
+	local emoji, color, tier, hasEffects
 	if amount >= 10_000_000 then
-		emoji = "<:starfall:1466700883097157755>"
+		emoji = "<:starfall:1574111560152911912>"
+		color = 0xff0000
+		tier = "10m"
+		hasEffects = true
 	elseif amount >= 1_000_000 then
-		emoji = "<:smite:1466700843293216914>"
+		emoji = "<:smite:1574111420491243600>"
+		color = 0xf507fb
+		tier = "1m"
+		hasEffects = true
 	else
-		emoji = "<:nuke:1466700817275949067>"
+		emoji = "<:nuke:1574112430391296130>"
+		color = 0xf80874
+		tier = "100k"
+		hasEffects = false
 	end
 
-	-- Create message with emoji
-	local message = emoji .. " donation"
+	-- Create message with the emoji right before the Robux amount
+	local message = emoji .. " " .. tostring(amount) .. " Robux donated"
 
 	print("[API] Logging donation:", donatorName, "→", raiserName, "-", amount, "Robux")
 
 	-- Try to send with custom image
-	local success = sendDonationImage(donatorName, donatorId, raiserName, raiserId, amount, message)
+	local success = sendDonationImage(donatorName, donatorId, raiserName, raiserId, amount, message, color, tier, hasEffects)
 
 	-- Fallback to embed if image API fails
 	if not success then
 		warn("[API] Image API failed, using fallback embed")
-		
-		local color
-		if amount >= 10_000_000 then
-			color = 0xff0000
-		elseif amount >= 1_000_000 then
-			color = 0xff66cc
-		else
-			color = 0x9966ff
-		end
 
 		local avatar = "https://www.roblox.com/headshot-thumbnail/image?userId="
 			.. donatorId .. "&width=420&height=420&format=png"
