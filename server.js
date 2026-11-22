@@ -3,11 +3,12 @@ const axios = require('axios');
 const FormData = require('form-data');
 require('dotenv').config();
 
-// Use @napi-rs/canvas: prebuilt binary, no system dependencies, works on Railway
+// Use the canvas package for image generation
 // If it fails to load, the server still starts and falls back to embed-only posts
 let canvasModule = null;
+let canvasLoadError = null;
 try {
-	canvasModule = require('@napi-rs/canvas');
+	canvasModule = require('canvas');
 	const { createCanvas, loadImage, GlobalFonts } = canvasModule;
 
 	// Register fonts if available (optional - falls back to default)
@@ -28,6 +29,7 @@ try {
 
 	console.log('✅ Canvas loaded successfully');
 } catch (error) {
+	canvasLoadError = error.message;
 	console.error('❌ Canvas failed to load - image generation disabled:', error.message);
 	console.error('The server will still run and post text embeds to Discord.');
 }
@@ -49,7 +51,7 @@ app.get('/health', (req, res) => {
 	res.json({
 		status: 'ok',
 		timestamp: new Date().toISOString(),
-		imageGeneration: canvasModule ? 'enabled' : 'disabled (canvas not loaded)'
+		imageGeneration: canvasModule ? 'enabled' : 'disabled', canvasError: canvasLoadError
 	});
 });
 
@@ -102,14 +104,20 @@ async function generateDonationImage(donorName, donorUserId, recipientName, reci
 	// Transparent background with fade only at the bottom
 	ctx.clearRect(0, 0, width, height);
 
-	// Create gradient fade - only at bottom, rest is transparent
-	const gradient = ctx.createLinearGradient(0, height, 0, height * 0.4);
-	gradient.addColorStop(0, 'rgba(255, 107, 180, 0.8)');     // Semi-transparent pink at bottom
-	gradient.addColorStop(0.5, 'rgba(255, 141, 196, 0.4)');   // Fade
-	gradient.addColorStop(1, 'rgba(255, 192, 203, 0)');       // Transparent
-
-	ctx.fillStyle = gradient;
-	ctx.fillRect(0, 0, width, height);
+	// Tier-colored gradient fade at the bottom - ONLY for the 1m and 10m tiers
+	// No fade for the 100k tier or amounts below 1m
+	if (rim || effects) {
+		const tierColor = color || '#ff1493';
+		const r = parseInt(tierColor.slice(1, 3), 16);
+		const g = parseInt(tierColor.slice(3, 5), 16);
+		const b = parseInt(tierColor.slice(5, 7), 16);
+		const gradient = ctx.createLinearGradient(0, height, 0, height * 0.4);
+		gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.8)`);
+		gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.4)`);
+		gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, width, height);
+	}
 
 	// Helper function for text with fill and black outline
 	const drawText = (text, x, y, size, fillColor, strokeWidth = 8) => {
@@ -179,11 +187,6 @@ async function generateDonationImage(donorName, donorUserId, recipientName, reci
 		ctx.drawImage(donorAvatar, leftAvatarX - avatarSize, avatarY - avatarSize, avatarSize * 2, avatarSize * 2);
 		ctx.restore();
 	}
-	ctx.strokeStyle = '#ff1493';
-	ctx.lineWidth = 10;
-	ctx.beginPath();
-	ctx.arc(leftAvatarX, avatarY, avatarSize, 0, Math.PI * 2);
-	ctx.stroke();
 
 	// Draw recipient avatar (right side) with hot pink border
 	if (recipientAvatar) {
@@ -195,34 +198,16 @@ async function generateDonationImage(donorName, donorUserId, recipientName, reci
 		ctx.drawImage(recipientAvatar, rightAvatarX - avatarSize, avatarY - avatarSize, avatarSize * 2, avatarSize * 2);
 		ctx.restore();
 	}
-	ctx.strokeStyle = '#ff1493';
-	ctx.lineWidth = 10;
-	ctx.beginPath();
-	ctx.arc(rightAvatarX, avatarY, avatarSize, 0, Math.PI * 2);
-	ctx.stroke();
 
-	// Rim + glow effects for the 1m and 10m tiers
-	if (rim || effects) {
-		for (const rimX of [leftAvatarX, rightAvatarX]) {
-			ctx.save();
-			ctx.shadowColor = color;
-			ctx.shadowBlur = 30;
-			ctx.strokeStyle = color;
-			ctx.lineWidth = 6;
-			ctx.beginPath();
-			ctx.arc(rimX, avatarY, avatarSize + 14, 0, Math.PI * 2);
-			ctx.stroke();
-			ctx.restore();
-		}
-	}
-
-	// Draw custom Discord emoji next to the amount
-	const emojiSize = 80;
+	// Draw custom Discord emoji directly in front of the first number, same size as the amount
+	const emojiSize = 100;
 	const amountX = 700;
-	const emojiX = amountX - 200;
 	const iconY = 120;
 
 	if (customEmoji) {
+		ctx.font = 'bold 100px sans-serif';
+		const amountWidth = ctx.measureText(formatNumber(amount)).width;
+		const emojiX = amountX - (amountWidth / 2) - emojiSize - 10;
 		ctx.drawImage(customEmoji, emojiX, iconY - emojiSize / 2, emojiSize, emojiSize);
 	}
 
@@ -230,15 +215,16 @@ async function generateDonationImage(donorName, donorUserId, recipientName, reci
 	const formattedAmount = formatNumber(amount);
 	const amountColor = color || '#ff1493';
 
-	if (rim || effects) {
-		// Glow behind the amount for the 1m and 10m tiers
+	if (tier === '10m') {
+		// Neon glow behind the amount ONLY for the 10m tier
 		ctx.save();
 		ctx.shadowColor = amountColor;
 		ctx.shadowBlur = 35;
 		drawText(formattedAmount, amountX, 120, 100, amountColor, 10);
 		ctx.restore();
 	} else {
-		drawText(formattedAmount, amountX, 120, 100, amountColor, 10);
+		// No glow for 1m, 100k, and below - plain bold text with black outline
+		drawText(formattedAmount, amountX, 120, 100, amountColor, 12);
 	}
 
 	// Draw "donated to" text
