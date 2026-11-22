@@ -7,7 +7,7 @@
 		"start": "node server.js"
 	},
 	"dependencies": {
-		"canvas": "^2.11.2",
+		"@napi-rs/canvas": "^0.1.65",
 		"axios": "^1.7.9",
 		"dotenv": "^16.4.7",
 		"express": "^4.21.2",
