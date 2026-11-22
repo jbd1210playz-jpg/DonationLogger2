@@ -1,19 +1,19 @@
 {
-	"name": "donation-logger",
-	"version": "1.0.0",
-	"description": "Donation image logger API for Roblox",
-	"main": "server.js",
-	"scripts": {
-		"start": "node server.js"
-	},
-	"dependencies": {
-		"@napi-rs/canvas": "^0.1.65",
-		"axios": "^1.7.9",
-		"dotenv": "^16.4.7",
-		"express": "^4.21.2",
-		"form-data": "^4.0.1"
-	},
-	"engines": {
-		"node": ">=18.0.0"
-	}
+  "name": "donation-logger",
+  "version": "1.0.0",
+  "description": "Donation image logger API for Roblox",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "canvas": "^2.11.2",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "form-data": "^4.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
