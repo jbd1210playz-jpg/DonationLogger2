@@ -107,11 +107,11 @@ end
 Lines 115-121:
 ```lua
 if amount >= 10_000_000 then
-    emoji = "<:starfall:1466700883097157755>"
+    emoji = "<:starfall:1574111560152911912>"
 elseif amount >= 1_000_000 then
-    emoji = "<:smite:1466700843293216914>"
+    emoji = "<:smite:1574111420491243600>"
 else
-    emoji = "<:nuke:1466700817275949067>"
+    emoji = "<:nuke:1574112430391296130>"
 end
 ```
 
