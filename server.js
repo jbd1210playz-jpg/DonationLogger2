@@ -436,4 +436,3 @@ app.listen(PORT, () => {
 		console.warn('⚠️  WARNING: DISCORD_WEBHOOK_URL not set in .env file');
 		}
 });
-
